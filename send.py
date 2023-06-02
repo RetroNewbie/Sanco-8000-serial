@@ -74,7 +74,6 @@ data.append(b'\x18')
 # quit()
 
 from tqdm import tqdm
-import time
 print(f"Sending file (size={len(data)} byte)")
 # print(data)
 # BLock at ~16k/17k

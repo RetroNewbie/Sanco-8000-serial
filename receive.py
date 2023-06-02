@@ -19,7 +19,6 @@ ser = serial.Serial(
         # Number of serial commands to accept before timing out
         timeout=1
 )
-# Pause the program for 1 second to avoid overworking the serial port
 # b'\x06'
 
 
