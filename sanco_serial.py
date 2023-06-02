@@ -40,27 +40,30 @@ def receive_file():
     print("Receiving file: "+filename)
     is_ending = False
     b_count = 0
+    c_count = 0
     while 1:
             x = ser.read(1)
 
             # Check for End of transmission
-            if x==b'\x18' and is_ending: break
-            if x==b'\x04': is_ending = True
-            else: is_ending = False
+            # if x==b'\x18' and is_ending: break
+            # if x==b'\x04': is_ending = True
+            # else: is_ending = False
 
+            if c_count==16384+128:
+                    c_count=0
+                    ser.write(b'\x06')
             # Check for "control" bit
             if b_count == 128:
                     b_count = 0
-                    print(f" {len(data)} - {x}")
+                    if x==b'\x04': break
                     if x!=b'\x17' and not is_ending:
-                        print(f"An error occured while reading the file + {len(data)}")
+                        print(f"An error occured while reading the file")
                         exit()
                     continue
             
             data.append(x)
             b_count+=1
-            
-    print(len(data))
+            c_count+=1
 
     print("File received")
     with open(filename,'wb') as file:
