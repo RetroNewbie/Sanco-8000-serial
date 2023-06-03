@@ -44,11 +44,6 @@ def receive_file():
     while 1:
             x = ser.read(1)
 
-            # Check for End of transmission
-            # if x==b'\x18' and is_ending: break
-            # if x==b'\x04': is_ending = True
-            # else: is_ending = False
-
             if c_count==16384+128:
                     c_count=0
                     ser.write(b'\x06')
