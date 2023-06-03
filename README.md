@@ -1,4 +1,4 @@
-# <div align="center"> Sanco serial utilities </div>
+# <div align="center"> Sanco 8000 serial utilities </div>
 
  This pyton script allows you to send and receive programs to/from a Sanco 8000 computer using its CP/M utilities RCX62 and TRX62.
 
