@@ -156,7 +156,7 @@ def main():
         exit()
     print("Select a serial port:")
     for i in range(len(ports)):
-        print(f"\t 1) {ports[i]}")
+        print(f"\t {i+1}) {ports[i]}")
 
     print("")
     sport = 0
