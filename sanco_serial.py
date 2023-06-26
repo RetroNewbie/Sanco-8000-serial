@@ -7,6 +7,7 @@ from tqdm import tqdm
 ser:serial.Serial = None
 PORT_NAME = ""
 BAUD_RATE = 0
+TARGET_FOLDER = "./DATA/"
 
 # Wait for ACK (0x06)
 def wait_for_confirm():
@@ -16,54 +17,67 @@ def wait_for_confirm():
 
 def receive_file():
     data = []
-    filename = ""
+    filename = []
+    idx = 0
     print("Waiting for transmission to start")
     while 1:
             if ser.read(1) == b'\x02': break
 
-
-    # Get file name
-    char_count = 0
     while 1:
-            x = ser.read(1)
-            if x==b'\x03' : break
-            if x==b'\x20' :
-                char_count+=1
-                continue
-            if char_count==8:
-                filename+="."
-            filename+=str(x.decode('ascii'))
-            char_count+=1
-            ser.write(b'\x06')
-
-    # Receive data
-    print("Receiving file: "+filename)
-    is_ending = False
-    b_count = 0
-    c_count = 0
-    while 1:
-            x = ser.read(1)
-
-            if c_count==16384+128:
-                    c_count=0
-                    ser.write(b'\x06')
-            # Check for "control" bit
-            if b_count == 128:
-                    b_count = 0
-                    if x==b'\x04': break
-                    if x!=b'\x17' and not is_ending:
-                        print(f"An error occured while reading the file")
-                        exit()
+        data.append([])
+        filename.append("")
+        # Get file name
+        char_count = 0
+        while 1:
+                x = ser.read(1)
+                if x==b'\x03' : break
+                if x==b'\x20' :
+                    char_count+=1
                     continue
-            
-            data.append(x)
-            b_count+=1
-            c_count+=1
+                if char_count==8:
+                    filename[idx]+="."
+                filename[idx]+=str(x.decode('ascii'))
+                char_count+=1
+                ser.write(b'\x06')
 
-    print("File received")
-    with open(filename,'wb') as file:
-            for i in data:
-                    file.write(i)
+        # Receive data
+        print("Receiving file: "+filename[idx])
+        is_ending = False
+        b_count = 0
+        c_count = 0
+        while 1:
+                x = ser.read(1)
+
+                if c_count==16384+128:
+                        c_count=0
+                        ser.write(b'\x06')
+                # Check for "control" bit
+                if b_count == 128:
+                        b_count = 0
+                        if x==b'\x04': break
+                        if x!=b'\x17' and not is_ending:
+                            print(f"An error occured while reading the file")
+                            exit()
+                        continue
+                
+                data[idx].append(x)
+                b_count+=1
+                c_count+=1
+        print("File received")
+        idx+=1
+        x = ser.read(1)
+        # print(x)
+        if x==b'\x17': 
+            for i in range(516):
+                 ser.read(1)
+            x = ser.read(1)
+        if x!=b'\x02' : break
+
+    for i in range(len(data)):
+        with open(TARGET_FOLDER+filename[i],'wb') as file:
+                for c in data[i]:
+                    file.write(c)
+                print(f"{filename[i]} saved in {TARGET_FOLDER+filename[i]}")
     quit()
 
 def send_file():
@@ -75,7 +89,8 @@ def send_file():
     local_filename = ""
 
     while 1==1:
-        local_filename = input("File to send: ")
+        local_filename = input(f"File to send (must be in dir '{TARGET_FOLDER}'): ")
+        local_filename = TARGET_FOLDER+local_filename
         if os.path.isfile(local_filename):
             break
         print("File not found")
@@ -198,6 +213,18 @@ def main():
     it = 0
     while it!=1 and it!=2:
         it = int(input(">>"))
+
+    print("Checking for target folder...")
+    if not os.path.isdir(TARGET_FOLDER):
+        print("Target folder not found, creating...")
+        try:
+            os.mkdir(TARGET_FOLDER)
+        except Exception as e:
+            print(f"Something went wrong while trying to create the folder: {TARGET_FOLDER}:\n\t"+str(e))
+            quit()
+        print(f"Target folder '{TARGET_FOLDER}' created")
+    else:
+         print("Target folder found\n")
 
     if it==1:
         send_file()
