@@ -83,80 +83,86 @@ def receive_file():
 def send_file():
     global ser
 
-    data = []
-    file_name = ""
-    file_extension = ""
-    local_filename = ""
+    while 1:
+        data = []
+        file_name = ""
+        file_extension = ""
+        local_filename = ""
 
-    while 1==1:
-        local_filename = input(f"File to send (must be in dir '{TARGET_FOLDER}'): ")
-        local_filename = TARGET_FOLDER+local_filename
-        if os.path.isfile(local_filename):
-            break
-        print("File not found")
+        while 1==1:
+            local_filename = input(f"File to send (must be in dir '{TARGET_FOLDER}'): ")
+            local_filename = TARGET_FOLDER+local_filename
+            if os.path.isfile(local_filename):
+                break
+            print("File not found")
 
-    while 1==1:
-        file_name = input("CP/M file name (without extension): ")
-        if len(file_name)>0 and len(file_name)<9:
-            break
-        print("The file name must be between 1 and 8 characters long")
-    
-    while len(file_name)!=8:
-        file_name+=" "
+        while 1==1:
+            file_name = input("CP/M file name (without extension): ")
+            if len(file_name)>0 and len(file_name)<9:
+                break
+            print("The file name must be between 1 and 8 characters long")
+        
+        while len(file_name)!=8:
+            file_name+=" "
 
-    while 1==1:
-        file_extension = input("CP/M file extension: ")
-        if len(file_extension)==3:
-            break
-        print("The file extension must be 3 characters long")
+        while 1==1:
+            file_extension = input("CP/M file extension: ")
+            if len(file_extension)==3:
+                break
+            print("The file extension must be 3 characters long")
 
-    file_name+=file_extension
-    data.append(b'\x02')
-    for char in file_name:
-            data.append(char.encode('ascii'))
-    data.append(b'\x03')
+        input("Press ENTER to start transmitting...")
 
-    with open(local_filename,'rb') as file:
-            b_count = 0
-            while True:
-                if b_count==128:
-                        b_count = 0
-                        data.append(b'\x17')
-                x = file.read(1)
-                if x == b"":
-                    break # end of file
-                data.append(x)
-                b_count +=1
-                
+        file_name+=file_extension
+        data.append(b'\x02')
+        for char in file_name:
+                data.append(char.encode('ascii'))
+        data.append(b'\x03')
 
-    if data[-1] == b'\x17' : data.pop() 
-    else:
-            while b_count<128:
-                b_count+=1
-                data.append(b'\x00')
-    data.append(b'\x04')
-    data.append(b'\x18')
-    data.append(b'\x04')
-    data.append(b'\x18')
+        with open(local_filename,'rb') as file:
+                b_count = 0
+                while True:
+                    if b_count==128:
+                            b_count = 0
+                            data.append(b'\x17')
+                    x = file.read(1)
+                    if x == b"":
+                        break # end of file
+                    data.append(x)
+                    b_count +=1
+                    
 
-    from tqdm import tqdm
-    print(f"Sending file (size={len(data)} byte)")
-    first_three = True
-    p_count = -13
-    for i in tqdm(range(len(data))):
-            ser.write(data[i])
-            if first_three and data[i] == b'\x03':
-                    first_three = False
-                    wait_for_confirm()
-            if p_count==16384+128:
-                    p_count=0
-                    wait_for_confirm()
-            if (ser.inWaiting() > 0):
-                    x = ser.read(1)
-                    print(f" {i} - {data[i]} - {x}")
-            p_count+=1
+        if data[-1] == b'\x17' : data.pop() 
+        else:
+                while b_count<128:
+                    b_count+=1
+                    data.append(b'\x00')
+        data.append(b'\x04')
+        data.append(b'\x18')
+        data.append(b'\x04')
+        data.append(b'\x18')
 
-    print("File sent")
+        from tqdm import tqdm
+        print(f"Sending file (size={len(data)} byte)")
+        first_three = True
+        p_count = -13
+        for i in tqdm(range(len(data))):
+                ser.write(data[i])
+                if first_three and data[i] == b'\x03':
+                        first_three = False
+                        wait_for_confirm()
+                if p_count==16384+128:
+                        p_count=0
+                        wait_for_confirm()
+                if (ser.inWaiting() > 0):
+                        x = ser.read(1)
+                        print(f" {i} - {data[i]} - {x}")
+                p_count+=1
+
+        print("File sent")
+        x = input("'Y' if you want to send another file, otherwise any other character: ")
+        if x!="Y": break
+        print("")
     quit()
 
 def main():
@@ -214,7 +220,7 @@ def main():
     while it!=1 and it!=2:
         it = int(input(">>"))
 
-    print("Checking for target folder...")
+    print("\nChecking for target folder...")
     if not os.path.isdir(TARGET_FOLDER):
         print("Target folder not found, creating...")
         try:
