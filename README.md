@@ -2,7 +2,11 @@
 
  This pyton script allows you to send and receive programs to/from a Sanco 8000 computer using its CP/M utilities RCX62 and TRX62.
 
- # Transmission description
+❗ It's now possible to receive multiple file❗
+
+You can receive all files by setting the script in receive mode and select everything ("\*.\*") in TRX62.
+
+# Transmission description
 
 ## Header
 
